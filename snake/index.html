@@ -445,20 +445,13 @@ function steerBot(bot) {
 
   // Find nearest orb
   let bestOrb = null, bestDist = Infinity;
+  let bestOrbDX = 0, bestOrbDY = 0;
   for (const orb of orbs) {
     let dx = orb.x - head.x, dy = orb.y - head.y;
     if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
     if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
     const d = dx*dx+dy*dy;
     if (d < bestDist) { bestDist = d; bestOrb = orb; bestOrbDX = dx; bestOrbDY = dy; }
-  }
-
-  let bestOrbDX = 0, bestOrbDY = 0;
-  if (bestOrb) {
-    let dx = bestOrb.x - head.x, dy = bestOrb.y - head.y;
-    if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
-    if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
-    bestOrbDX = dx; bestOrbDY = dy;
   }
 
   if (bot.changeTimer <= 0 || bestOrb) {
