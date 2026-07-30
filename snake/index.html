@@ -344,6 +344,10 @@ function startGame() {
   boosting = false;
   gameRunning = true;
 
+  // Snap camera to player immediately so there's no black screen
+  camera.x = sx - W / 2;
+  camera.y = sy - H / 2;
+
   document.getElementById('ui-overlay').style.display = 'none';
   document.getElementById('death-screen').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
