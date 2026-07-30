@@ -5,862 +5,797 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Snake.io</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #1a1a2e;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    overflow: hidden;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    color: #fff;
-    user-select: none;
-  }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  #ui-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(10, 10, 30, 0.88);
-    z-index: 10;
-  }
+body {
+  background: #111;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow: hidden;
+  color: #fff;
+  user-select: none;
+}
 
-  #ui-overlay h1 {
-    font-size: 64px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #4ade80;
-    text-shadow: 0 0 30px #4ade8088, 0 0 60px #4ade8044;
-    margin-bottom: 10px;
-  }
+canvas {
+  position: fixed;
+  top: 0; left: 0;
+}
 
-  #ui-overlay p.subtitle {
-    font-size: 16px;
-    color: #94a3b8;
-    margin-bottom: 36px;
-  }
+/* ── Screens ── */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 22, 0.92);
+  z-index: 20;
+}
+.screen.hidden { display: none; }
 
-  #name-input {
-    background: rgba(255,255,255,0.08);
-    border: 2px solid #4ade80;
-    border-radius: 12px;
-    padding: 14px 24px;
-    font-size: 22px;
-    color: #fff;
-    text-align: center;
-    outline: none;
-    width: 280px;
-    margin-bottom: 20px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  #name-input:focus {
-    border-color: #86efac;
-    box-shadow: 0 0 20px #4ade8066;
-  }
+#start-screen h1 {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #4ade80;
+  text-shadow: 0 0 40px #4ade8066;
+  margin-bottom: 6px;
+}
+#start-screen p {
+  color: #64748b;
+  margin-bottom: 32px;
+  font-size: 15px;
+}
 
-  #skin-selector {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-  .skin-btn {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    border: 3px solid transparent;
-    cursor: pointer;
-    transition: border-color 0.15s, transform 0.15s;
-  }
-  .skin-btn.selected { border-color: #fff; transform: scale(1.2); }
+input[type=text] {
+  background: rgba(255,255,255,0.07);
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  width: 260px;
+  margin-bottom: 18px;
+  transition: border-color .2s;
+}
+input[type=text]:focus { border-color: #4ade80; }
 
-  #play-btn {
-    background: linear-gradient(135deg, #4ade80, #22c55e);
-    color: #0f1f0f;
-    font-size: 22px;
-    font-weight: 800;
-    border: none;
-    border-radius: 50px;
-    padding: 16px 60px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    box-shadow: 0 0 30px #4ade8066;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  #play-btn:hover { transform: scale(1.06); box-shadow: 0 0 40px #4ade80aa; }
+.skins {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.skin-dot {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform .15s, border-color .15s;
+}
+.skin-dot.on { border-color: #fff; transform: scale(1.2); }
 
-  #hud {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    padding: 12px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    z-index: 5;
-    pointer-events: none;
-  }
-  #score-panel {
-    background: rgba(0,0,0,0.5);
-    border-radius: 12px;
-    padding: 10px 20px;
-    backdrop-filter: blur(6px);
-  }
-  #score-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-  #score-val { font-size: 32px; font-weight: 900; color: #4ade80; line-height: 1; }
-  #length-val { font-size: 13px; color: #86efac; }
+.btn {
+  padding: 14px 56px;
+  font-size: 20px;
+  font-weight: 800;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.btn:hover { transform: scale(1.07); }
+.btn-green { background: linear-gradient(135deg,#4ade80,#22c55e); color: #0a2010; box-shadow: 0 0 24px #4ade8055; }
+.btn-red   { background: linear-gradient(135deg,#f87171,#ef4444); color: #fff;    box-shadow: 0 0 24px #f8717155; }
 
-  #leaderboard {
-    background: rgba(0,0,0,0.5);
-    border-radius: 12px;
-    padding: 10px 16px;
-    backdrop-filter: blur(6px);
-    min-width: 160px;
-  }
-  #leaderboard h3 { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .lb-row { font-size: 13px; display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
-  .lb-row.me { color: #4ade80; font-weight: 700; }
+/* ── Death screen ── */
+#death-screen h2 { font-size: 58px; font-weight:900; color:#f87171; text-shadow:0 0 30px #f8717188; margin-bottom:10px; }
+#death-stats { font-size:17px; color:#94a3b8; margin-bottom:28px; line-height:2; text-align:center; }
+#death-stats b { color:#fff; }
 
-  #minimap {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 5;
-    border-radius: 8px;
-    border: 2px solid rgba(255,255,255,0.15);
-    background: rgba(0,0,0,0.4);
-    image-rendering: pixelated;
-  }
+/* ── HUD ── */
+#hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+#hud.hidden { display: none; }
 
-  #death-screen {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(10,10,30,0.88);
-    z-index: 10;
-  }
-  #death-screen h2 {
-    font-size: 52px;
-    font-weight: 900;
-    color: #f87171;
-    text-shadow: 0 0 30px #f8717188;
-    margin-bottom: 10px;
-  }
-  #death-stats { font-size: 18px; color: #94a3b8; margin-bottom: 30px; text-align: center; line-height: 1.8; }
-  #death-stats span { color: #fff; font-weight: 700; }
-  #respawn-btn {
-    background: linear-gradient(135deg, #f87171, #ef4444);
-    color: #fff;
-    font-size: 20px;
-    font-weight: 800;
-    border: none;
-    border-radius: 50px;
-    padding: 14px 52px;
-    cursor: pointer;
-    box-shadow: 0 0 30px #f8717166;
-    transition: transform 0.15s;
-  }
-  #respawn-btn:hover { transform: scale(1.06); }
+.panel {
+  background: rgba(0,0,0,0.55);
+  border-radius: 12px;
+  padding: 10px 16px;
+  backdrop-filter: blur(4px);
+}
+#score-panel .lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
+#score-panel .val { font-size:34px; font-weight:900; color:#4ade80; line-height:1; }
+#score-panel .sub { font-size:12px; color:#86efac; margin-top:2px; }
 
-  canvas { display: block; }
+#lb h3 { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.lb-row { font-size:13px; display:flex; justify-content:space-between; gap:12px; padding:1px 0; }
+.lb-me  { color:#4ade80; font-weight:700; }
+
+#minimap-wrap {
+  position: fixed;
+  bottom: 14px; right: 14px;
+  z-index: 10;
+}
+#minimap-wrap.hidden { display: none; }
+#minimap {
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.12);
+}
 </style>
 </head>
 <body>
 
-<!-- Start Screen -->
-<div id="ui-overlay">
+<!-- Canvases -->
+<canvas id="gc"></canvas>
+<canvas id="minimap" width="130" height="130"></canvas>
+
+<!-- Start -->
+<div id="start-screen" class="screen">
   <h1>SNAKE.IO</h1>
-  <p class="subtitle">Eat orbs. Grow bigger. Dominate the arena.</p>
-  <input id="name-input" type="text" placeholder="Enter your name" maxlength="16" value="Player" />
-  <div id="skin-selector"></div>
-  <button id="play-btn">PLAY</button>
+  <p>Eat orbs · Grow big · Outlast everyone</p>
+  <input id="name-inp" type="text" value="Player" maxlength="16" placeholder="Your name" />
+  <div class="skins" id="skins"></div>
+  <button class="btn btn-green" id="play-btn">PLAY</button>
 </div>
 
-<!-- Death Screen -->
-<div id="death-screen">
+<!-- Death -->
+<div id="death-screen" class="screen hidden">
   <h2>YOU DIED</h2>
   <div id="death-stats"></div>
-  <button id="respawn-btn">PLAY AGAIN</button>
+  <button class="btn btn-red" id="retry-btn">PLAY AGAIN</button>
 </div>
 
 <!-- HUD -->
-<div id="hud">
-  <div id="score-panel">
-    <div id="score-label">Score</div>
-    <div id="score-val">0</div>
-    <div id="length-val">Length: 5</div>
+<div id="hud" class="hidden">
+  <div class="panel" id="score-panel">
+    <div class="lbl">Score</div>
+    <div class="val" id="sv">0</div>
+    <div class="sub" id="lv">Length 5</div>
   </div>
-  <div id="leaderboard">
+  <div class="panel" id="lb">
     <h3>Leaderboard</h3>
-    <div id="lb-entries"></div>
+    <div id="lb-rows"></div>
   </div>
 </div>
 
-<canvas id="minimap" width="120" height="120"></canvas>
-<canvas id="gameCanvas"></canvas>
+<div id="minimap-wrap" class="hidden">
+  <!-- minimap canvas already in DOM -->
+</div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
-const WORLD = 3000;
-const CELL  = 20;           // snake segment size
-const BASE_SPEED = 2.8;
-const BOOST_SPEED = 5.5;
-const TURN_SPEED = 0.065;
-const ORB_COUNT = 600;
-const BOT_COUNT = 14;
-const FOOD_FROM_DEATH = 18; // orbs dropped when a snake dies
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const WORLD      = 3000;
+const SEG_R      = 10;       // segment radius
+const SPEED      = 2.6;
+const BOOST_SPD  = 5.2;
+const TURN       = 0.07;
+const NUM_ORBS   = 550;
+const NUM_BOTS   = 12;
 
-// Skin palette
 const SKINS = [
-  { head: '#4ade80', body: ['#22c55e','#16a34a'], name: 'Green' },
-  { head: '#60a5fa', body: ['#3b82f6','#2563eb'], name: 'Blue' },
-  { head: '#f87171', body: ['#ef4444','#dc2626'], name: 'Red' },
-  { head: '#fbbf24', body: ['#f59e0b','#d97706'], name: 'Gold' },
-  { head: '#a78bfa', body: ['#8b5cf6','#7c3aed'], name: 'Purple' },
-  { head: '#fb923c', body: ['#f97316','#ea580c'], name: 'Orange' },
-  { head: '#f472b6', body: ['#ec4899','#db2777'], name: 'Pink' },
-  { head: '#34d399', body: ['#10b981','#059669'], name: 'Teal' },
+  { h:'#4ade80', b:'#16a34a' },
+  { h:'#60a5fa', b:'#2563eb' },
+  { h:'#f87171', b:'#dc2626' },
+  { h:'#fbbf24', b:'#b45309' },
+  { h:'#a78bfa', b:'#7c3aed' },
+  { h:'#fb923c', b:'#ea580c' },
+  { h:'#f472b6', b:'#db2777' },
+  { h:'#34d399', b:'#059669' },
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-const canvas = document.getElementById('gameCanvas');
-const ctx    = canvas.getContext('2d');
-const mm     = document.getElementById('minimap');
-const mctx   = mm.getContext('2d');
+const BOT_NAMES = ['Slithera','Kobra','Vipex','NagaX','Mamba','Taipan',
+                   'Asp','Racer','Krait','Boidae','Serpo','Pythia'];
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS / STATE
+// ═══════════════════════════════════════════════════════
+const gc    = document.getElementById('gc');
+const ctx   = gc.getContext('2d');
+const mm    = document.getElementById('minimap');
+const mctx  = mm.getContext('2d');
 
 let W = 0, H = 0;
-let gameRunning = false;
-let animId = null;
-let player = null;
-let bots = [];
-let orbs = [];
-let particles = [];
-let camera = { x: 0, y: 0 };
-let mouseX = 0, mouseY = 0;
-let boosting = false;
-let score = 0;
-let startTime = 0;
-let selectedSkin = 0;
-let playerName = 'Player';
-let kills = 0;
+let running = false;
+let rafId   = null;
 
-// ─── RESIZE ───────────────────────────────────────────────────────────────────
+let player  = null;
+let bots    = [];
+let orbs    = [];
+let sparks  = [];
+
+let camX = 0, camY = 0;
+let mX = 0, mY = 0;
+let pressing = false;
+
+let score     = 0;
+let kills     = 0;
+let born      = 0;
+let skinIdx   = 0;
+let pName     = 'Player';
+
+// ═══════════════════════════════════════════════════════
+//  RESIZE
+// ═══════════════════════════════════════════════════════
 function resize() {
-  W = canvas.width  = window.innerWidth;
-  H = canvas.height = window.innerHeight;
+  W = gc.width  = window.innerWidth;
+  H = gc.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ─── SKIN SELECTOR ────────────────────────────────────────────────────────────
-const skinSel = document.getElementById('skin-selector');
+// ═══════════════════════════════════════════════════════
+//  SKIN SELECTOR
+// ═══════════════════════════════════════════════════════
+const skinsEl = document.getElementById('skins');
 SKINS.forEach((s, i) => {
-  const b = document.createElement('div');
-  b.className = 'skin-btn' + (i === 0 ? ' selected' : '');
-  b.style.background = s.head;
-  b.title = s.name;
-  b.addEventListener('click', () => {
-    document.querySelectorAll('.skin-btn').forEach(x => x.classList.remove('selected'));
-    b.classList.add('selected');
-    selectedSkin = i;
-  });
-  skinSel.appendChild(b);
+  const d = document.createElement('div');
+  d.className = 'skin-dot' + (i === 0 ? ' on' : '');
+  d.style.background = s.h;
+  d.onclick = () => {
+    document.querySelectorAll('.skin-dot').forEach(x => x.classList.remove('on'));
+    d.classList.add('on');
+    skinIdx = i;
+  };
+  skinsEl.appendChild(d);
 });
 
-// ─── ORB ──────────────────────────────────────────────────────────────────────
-function makeOrb(x, y) {
-  const hue = Math.random() * 360;
-  return {
-    x: x ?? Math.random() * WORLD,
-    y: y ?? Math.random() * WORLD,
-    r: 5 + Math.random() * 5,
-    color: `hsl(${hue},80%,60%)`,
-    glow:  `hsl(${hue},80%,80%)`,
-    pulse: Math.random() * Math.PI * 2,
-  };
+// ═══════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════
+gc.addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
+gc.addEventListener('mousedown', e => { if (e.button === 0) pressing = true; });
+gc.addEventListener('mouseup',   e => { if (e.button === 0) pressing = false; });
+gc.addEventListener('touchmove', e => {
+  e.preventDefault();
+  mX = e.touches[0].clientX;
+  mY = e.touches[0].clientY;
+}, { passive: false });
+gc.addEventListener('touchstart', e => {
+  mX = e.touches[0].clientX;
+  mY = e.touches[0].clientY;
+  pressing = e.touches.length > 1;
+});
+gc.addEventListener('touchend', () => { pressing = false; });
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function wrapDelta(a, b) {
+  let d = a - b;
+  if (d >  WORLD / 2) d -= WORLD;
+  if (d < -WORLD / 2) d += WORLD;
+  return d;
 }
 
-function spawnOrbs() {
-  orbs = [];
-  for (let i = 0; i < ORB_COUNT; i++) orbs.push(makeOrb());
+function wrapCoord(v) {
+  return ((v % WORLD) + WORLD) % WORLD;
 }
 
-// ─── SNAKE FACTORY ────────────────────────────────────────────────────────────
+function angleTo(ax, ay, bx, by) {
+  return Math.atan2(wrapDelta(by, ay), wrapDelta(bx, ax));
+}
+
+function dist2(ax, ay, bx, by) {
+  const dx = wrapDelta(ax, bx);
+  const dy = wrapDelta(ay, by);
+  return dx * dx + dy * dy;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SNAKE FACTORY
+// ═══════════════════════════════════════════════════════
 function makeSnake(x, y, skin, name, isPlayer) {
   const segs = [];
-  for (let i = 0; i < 8; i++) segs.push({ x: x - i * CELL, y });
+  for (let i = 0; i < 10; i++) {
+    segs.push({ x: wrapCoord(x - i * SEG_R * 2), y });
+  }
   return {
     segs,
     angle: 0,
-    targetAngle: 0,
-    speed: BASE_SPEED,
     skin,
     name,
     isPlayer,
     alive: true,
-    score: 0,
-    length: 8,
-    boosting: false,
-    boostFuel: 100,
-    trail: [],
+    len: 10,      // target segment count
+    fuel: 100,
+    points: 0,
   };
 }
 
-// ─── BOT NAMES ────────────────────────────────────────────────────────────────
-const BOT_NAMES = ['Slithera','Kobra','Vipex','NagaX','Serpo','Ouroboros','Mamba',
-  'Pythia','Ratsnake','Boidae','Asp','Taipan','Krait','Racer'];
+// ═══════════════════════════════════════════════════════
+//  ORB FACTORY
+// ═══════════════════════════════════════════════════════
+function makeOrb(x, y) {
+  const hue = (Math.random() * 360) | 0;
+  return {
+    x: x != null ? x : Math.random() * WORLD,
+    y: y != null ? y : Math.random() * WORLD,
+    r: 4 + Math.random() * 5,
+    hue,
+  };
+}
 
-function spawnBots() {
-  bots = [];
-  for (let i = 0; i < BOT_COUNT; i++) {
-    const sx = 300 + Math.random() * (WORLD - 600);
-    const sy = 300 + Math.random() * (WORLD - 600);
-    const skin = SKINS[(i + 1 + selectedSkin) % SKINS.length];
+// ═══════════════════════════════════════════════════════
+//  SPARK FACTORY
+// ═══════════════════════════════════════════════════════
+function burst(x, y, color, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = 1.5 + Math.random() * 4;
+    sparks.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1, r: 2+Math.random()*3, color });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  START GAME
+// ═══════════════════════════════════════════════════════
+function startGame() {
+  pName   = document.getElementById('name-inp').value.trim() || 'Player';
+  score   = 0;
+  kills   = 0;
+  born    = Date.now();
+  sparks  = [];
+  bots    = [];
+  orbs    = [];
+
+  // Orbs
+  for (let i = 0; i < NUM_ORBS; i++) orbs.push(makeOrb());
+
+  // Player at center
+  const sx = WORLD / 2, sy = WORLD / 2;
+  player = makeSnake(sx, sy, SKINS[skinIdx], pName, true);
+  mX = W / 2; mY = H / 2 - 1; // default mouse slightly up
+
+  // Camera snap
+  camX = sx - W / 2;
+  camY = sy - H / 2;
+
+  // Bots
+  for (let i = 0; i < NUM_BOTS; i++) {
+    const bx = 400 + Math.random() * (WORLD - 800);
+    const by = 400 + Math.random() * (WORLD - 800);
+    const skin = SKINS[(skinIdx + 1 + i) % SKINS.length];
     bots.push({
-      snake: makeSnake(sx, sy, skin, BOT_NAMES[i % BOT_NAMES.length], false),
-      targetAngle: Math.random() * Math.PI * 2,
-      changeTimer: 0,
+      snake: makeSnake(bx, by, skin, BOT_NAMES[i % BOT_NAMES.length], false),
+      timer: 0,
     });
   }
+
+  show('none');
+  running = true;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(tick);
 }
 
-// ─── GAME START ───────────────────────────────────────────────────────────────
-function startGame() {
-  playerName = document.getElementById('name-input').value.trim() || 'Player';
-  const skin = SKINS[selectedSkin];
-  spawnOrbs();
-  spawnBots();
-
-  const sx = WORLD / 2, sy = WORLD / 2;
-  player = makeSnake(sx, sy, skin, playerName, true);
-  score = 0;
-  kills = 0;
-  startTime = Date.now();
-  boosting = false;
-  gameRunning = true;
-
-  // Snap camera to player immediately so there's no black screen
-  camera.x = sx - W / 2;
-  camera.y = sy - H / 2;
-
-  document.getElementById('ui-overlay').style.display = 'none';
-  document.getElementById('death-screen').style.display = 'none';
-  document.getElementById('hud').style.display = 'flex';
-  document.getElementById('minimap').style.display = 'block';
-
-  if (animId) cancelAnimationFrame(animId);
-  loop();
+// ═══════════════════════════════════════════════════════
+//  SHOW / HIDE SCREENS
+// ═══════════════════════════════════════════════════════
+function show(which) {
+  document.getElementById('start-screen').classList.toggle('hidden', which !== 'start');
+  document.getElementById('death-screen').classList.toggle('hidden', which !== 'death');
+  document.getElementById('hud').classList.toggle('hidden', which === 'start' || which === 'death');
+  document.getElementById('minimap-wrap').classList.toggle('hidden', which !== 'none');
+  // Always show minimap canvas
+  mm.style.display = which === 'none' ? 'block' : 'none';
 }
 
-// ─── INPUT ────────────────────────────────────────────────────────────────────
-canvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-canvas.addEventListener('mousedown', e => { if (e.button === 0) boosting = true; });
-canvas.addEventListener('mouseup',   e => { if (e.button === 0) boosting = false; });
-canvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  mouseX = e.touches[0].clientX;
-  mouseY = e.touches[0].clientY;
-}, { passive: false });
-canvas.addEventListener('touchstart', e => {
-  mouseX = e.touches[0].clientX;
-  mouseY = e.touches[0].clientY;
-  boosting = e.touches.length > 1;
-});
-canvas.addEventListener('touchend', () => boosting = false);
+// Show start at load
+show('start');
 
-document.getElementById('play-btn').addEventListener('click', startGame);
-document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
-document.getElementById('respawn-btn').addEventListener('click', startGame);
+// ═══════════════════════════════════════════════════════
+//  STEER
+// ═══════════════════════════════════════════════════════
+function steerSnake(snake) {
+  // target angle = direction of mouse from screen center
+  const tx = mX - W / 2;
+  const ty = mY - H / 2;
+  const target = Math.atan2(ty, tx);
 
-// ─── MOVE SNAKE ───────────────────────────────────────────────────────────────
-function moveSnake(snake) {
-  if (!snake.alive) return;
-
-  const head = snake.segs[0];
-  let dx = Math.cos(snake.angle);
-  let dy = Math.sin(snake.angle);
-  const speed = snake.boosting && snake.boostFuel > 0 ? BOOST_SPEED : BASE_SPEED;
-
-  const newHead = { x: head.x + dx * speed, y: head.y + dy * speed };
-
-  // World wrap
-  newHead.x = ((newHead.x % WORLD) + WORLD) % WORLD;
-  newHead.y = ((newHead.y % WORLD) + WORLD) % WORLD;
-
-  snake.segs.unshift(newHead);
-
-  // Keep length
-  const targetLen = snake.length * CELL;
-  let total = 0;
-  for (let i = 1; i < snake.segs.length; i++) {
-    let dx = snake.segs[i].x - snake.segs[i-1].x;
-    let dy = snake.segs[i].y - snake.segs[i-1].y;
-    // handle wrap
-    if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
-    if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
-    total += Math.sqrt(dx*dx+dy*dy);
-    if (total > targetLen) { snake.segs.length = i + 1; break; }
-  }
-
-  // Boost fuel
-  if (snake.boosting && snake.boostFuel > 0) {
-    snake.boostFuel = Math.max(0, snake.boostFuel - 0.4);
-    if (Math.random() < 0.25) {
-      orbs.push(makeOrb(head.x + (Math.random()-0.5)*10, head.y + (Math.random()-0.5)*10));
-      score -= 0; // no score penalty but drop orbs
-    }
-  } else if (!snake.boosting) {
-    snake.boostFuel = Math.min(100, snake.boostFuel + 0.15);
-  }
-}
-
-// ─── STEER PLAYER ─────────────────────────────────────────────────────────────
-function steerPlayer() {
-  if (!player || !player.alive) return;
-  const cx = W / 2, cy = H / 2;
-  const dx = mouseX - cx, dy = mouseY - cy;
-  if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
-  player.targetAngle = Math.atan2(dy, dx);
-  player.boosting = boosting && player.boostFuel > 0;
-
-  // Smooth turn
-  let diff = player.targetAngle - player.angle;
-  while (diff > Math.PI)  diff -= 2 * Math.PI;
+  let diff = target - snake.angle;
+  while (diff >  Math.PI) diff -= 2 * Math.PI;
   while (diff < -Math.PI) diff += 2 * Math.PI;
-  player.angle += Math.sign(diff) * Math.min(Math.abs(diff), TURN_SPEED);
+  snake.angle += Math.sign(diff) * Math.min(Math.abs(diff), TURN);
 }
 
-// ─── STEER BOTS ───────────────────────────────────────────────────────────────
 function steerBot(bot) {
-  const snake = bot.snake;
-  if (!snake.alive) return;
+  const s = bot.snake;
+  const head = s.segs[0];
 
-  bot.changeTimer--;
-  const head = snake.segs[0];
-
-  // Find nearest orb
-  let bestOrb = null, bestDist = Infinity;
-  let bestOrbDX = 0, bestOrbDY = 0;
-  for (const orb of orbs) {
-    let dx = orb.x - head.x, dy = orb.y - head.y;
-    if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
-    if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
-    const d = dx*dx+dy*dy;
-    if (d < bestDist) { bestDist = d; bestOrb = orb; bestOrbDX = dx; bestOrbDY = dy; }
-  }
-
-  if (bot.changeTimer <= 0 || bestOrb) {
-    if (bestOrb && bestDist < 80000) {
-      bot.targetAngle = Math.atan2(bestOrbDY, bestOrbDX);
-    } else {
-      bot.targetAngle += (Math.random() - 0.5) * 0.8;
+  bot.timer--;
+  if (bot.timer <= 0) {
+    // Pick nearest orb
+    let best = null, bd = Infinity;
+    for (const o of orbs) {
+      const d = dist2(head.x, head.y, o.x, o.y);
+      if (d < bd) { bd = d; best = o; }
     }
-    bot.changeTimer = 20 + Math.random() * 60;
+    if (best) {
+      bot.targetAngle = angleTo(head.x, head.y, best.x, best.y);
+    } else {
+      bot.targetAngle = (bot.targetAngle || 0) + (Math.random() - 0.5) * 1.2;
+    }
+    bot.timer = 30 + (Math.random() * 60) | 0;
   }
 
   // Edge avoidance
-  const margin = 200;
-  if (head.x < margin) bot.targetAngle = 0;
-  else if (head.x > WORLD - margin) bot.targetAngle = Math.PI;
-  if (head.y < margin) bot.targetAngle = Math.PI/2;
-  else if (head.y > WORLD - margin) bot.targetAngle = -Math.PI/2;
+  const m = 180;
+  if (head.x < m)          bot.targetAngle = 0;
+  if (head.x > WORLD - m)  bot.targetAngle = Math.PI;
+  if (head.y < m)          bot.targetAngle = Math.PI / 2;
+  if (head.y > WORLD - m)  bot.targetAngle = -Math.PI / 2;
 
-  let diff = bot.targetAngle - snake.angle;
-  while (diff > Math.PI)  diff -= 2*Math.PI;
-  while (diff < -Math.PI) diff += 2*Math.PI;
-  snake.angle += Math.sign(diff) * Math.min(Math.abs(diff), TURN_SPEED * 0.8);
-  snake.boosting = false;
+  let diff = bot.targetAngle - s.angle;
+  while (diff >  Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  s.angle += Math.sign(diff) * Math.min(Math.abs(diff), TURN * 0.75);
 }
 
-// ─── EAT ORBS ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  MOVE
+// ═══════════════════════════════════════════════════════
+function moveSnake(snake) {
+  const boosting = snake.isPlayer ? (pressing && snake.fuel > 0) : false;
+  snake.boosting = boosting;
+  const spd = boosting ? BOOST_SPD : SPEED;
+
+  if (boosting) {
+    snake.fuel = Math.max(0, snake.fuel - 0.5);
+    // Shed a tiny orb while boosting
+    if (Math.random() < 0.3) {
+      const tail = snake.segs[snake.segs.length - 1];
+      orbs.push(makeOrb(tail.x + (Math.random()-0.5)*8, tail.y + (Math.random()-0.5)*8));
+    }
+  } else {
+    snake.fuel = Math.min(100, snake.fuel + 0.18);
+  }
+
+  const head = snake.segs[0];
+  const nx = wrapCoord(head.x + Math.cos(snake.angle) * spd);
+  const ny = wrapCoord(head.y + Math.sin(snake.angle) * spd);
+  snake.segs.unshift({ x: nx, y: ny });
+
+  // Trim to target length (each seg = SEG_R*2 spacing ideally, but we just use count)
+  while (snake.segs.length > snake.len) snake.segs.pop();
+}
+
+// ═══════════════════════════════════════════════════════
+//  EAT ORBS
+// ═══════════════════════════════════════════════════════
 function eatOrbs(snake) {
   const head = snake.segs[0];
+  const eat_r2 = (SEG_R + 8) ** 2;
   for (let i = orbs.length - 1; i >= 0; i--) {
     const o = orbs[i];
-    let dx = o.x - head.x, dy = o.y - head.y;
-    if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
-    if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
-    if (dx*dx + dy*dy < (CELL*0.8 + o.r) ** 2) {
-      snake.length += 0.5;
-      snake.score  += Math.ceil(o.r);
-      if (snake.isPlayer) score += Math.ceil(o.r);
-      spawnParticles(o.x, o.y, o.color, 3);
+    if (dist2(head.x, head.y, o.x, o.y) < eat_r2) {
+      snake.len    += 1;
+      snake.points += (o.r | 0);
+      if (snake.isPlayer) score += (o.r | 0);
+      burst(o.x, o.y, `hsl(${o.hue},80%,60%)`, 4);
       orbs.splice(i, 1);
-      // Respawn orb elsewhere
-      orbs.push(makeOrb());
+      orbs.push(makeOrb()); // respawn elsewhere
     }
   }
 }
 
-// ─── COLLISION DETECTION ──────────────────────────────────────────────────────
-function snakeDist2(ax, ay, bx, by) {
-  let dx = ax - bx, dy = ay - by;
-  if (Math.abs(dx) > WORLD/2) dx -= Math.sign(dx)*WORLD;
-  if (Math.abs(dy) > WORLD/2) dy -= Math.sign(dy)*WORLD;
-  return dx*dx + dy*dy;
-}
-
+// ═══════════════════════════════════════════════════════
+//  COLLISIONS
+// ═══════════════════════════════════════════════════════
 function checkCollisions() {
-  const allSnakes = [player, ...bots.map(b => b.snake)].filter(s => s && s.alive);
+  const all = [player, ...bots.map(b => b.snake)].filter(s => s && s.alive);
 
-  for (const snake of allSnakes) {
-    if (!snake.alive) continue;
-    const head = snake.segs[0];
+  for (const s of all) {
+    if (!s.alive) continue;
+    const hx = s.segs[0].x, hy = s.segs[0].y;
+    const kill_r2 = (SEG_R * 1.4) ** 2;
 
-    for (const other of allSnakes) {
+    for (const other of all) {
       if (!other.alive) continue;
-      const startIdx = (snake === other) ? 8 : 0;
-      for (let i = startIdx; i < other.segs.length; i++) {
+      const skip = s === other ? 6 : 0;
+      for (let i = skip; i < other.segs.length; i++) {
         const seg = other.segs[i];
-        if (snakeDist2(head.x, head.y, seg.x, seg.y) < (CELL * 0.7) ** 2) {
-          killSnake(snake, other);
+        if (dist2(hx, hy, seg.x, seg.y) < kill_r2) {
+          die(s);
           break;
         }
       }
-      if (!snake.alive) break;
+      if (!s.alive) break;
     }
   }
 }
 
-function killSnake(snake, killer) {
+function die(snake) {
   snake.alive = false;
-  // Drop orbs
-  const drop = Math.min(snake.segs.length, FOOD_FROM_DEATH + Math.floor(snake.length));
-  for (let i = 0; i < drop; i++) {
-    const seg = snake.segs[Math.floor(Math.random() * snake.segs.length)];
-    orbs.push(makeOrb(seg.x + (Math.random()-0.5)*30, seg.y + (Math.random()-0.5)*30));
-  }
-  // Particles
-  spawnParticles(snake.segs[0].x, snake.segs[0].y, snake.skin.head, 20);
-
-  if (killer && killer.isPlayer) kills++;
-  if (snake.isPlayer) {
-    showDeath();
-  }
-}
-
-// ─── PARTICLES ────────────────────────────────────────────────────────────────
-function spawnParticles(x, y, color, count) {
+  const count = Math.min(snake.segs.length, 20 + snake.len);
   for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 1 + Math.random() * 4;
-    particles.push({
-      x, y, color,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 1,
-      r: 2 + Math.random() * 4,
-    });
+    const seg = snake.segs[(Math.random() * snake.segs.length) | 0];
+    orbs.push(makeOrb(seg.x + (Math.random()-0.5)*20, seg.y + (Math.random()-0.5)*20));
+  }
+  burst(snake.segs[0].x, snake.segs[0].y, snake.skin.h, 24);
+
+  if (snake.isPlayer) {
+    running = false;
+    const secs = Math.floor((Date.now() - born) / 1000);
+    document.getElementById('death-stats').innerHTML =
+      `Score <b>${score}</b><br>Length <b>${snake.len}</b><br>` +
+      `Kills <b>${kills}</b><br>Time <b>${Math.floor(secs/60)}m ${secs%60}s</b>`;
+    show('death');
   }
 }
 
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx; p.y += p.vy;
-    p.vx *= 0.95; p.vy *= 0.95;
-    p.life -= 0.025;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-}
-
-// ─── RESPAWN DEAD BOTS ────────────────────────────────────────────────────────
-function respawnDeadBots() {
+// ═══════════════════════════════════════════════════════
+//  RESPAWN BOTS
+// ═══════════════════════════════════════════════════════
+function respawnBots() {
   for (const bot of bots) {
     if (!bot.snake.alive) {
-      const sx = 300 + Math.random() * (WORLD - 600);
-      const sy = 300 + Math.random() * (WORLD - 600);
-      bot.snake = makeSnake(sx, sy, bot.snake.skin, bot.snake.name, false);
-      bot.changeTimer = 0;
+      const bx = 400 + Math.random() * (WORLD - 800);
+      const by = 400 + Math.random() * (WORLD - 800);
+      bot.snake = makeSnake(bx, by, bot.snake.skin, bot.snake.name, false);
+      bot.timer = 0;
     }
   }
 }
 
-// ─── CAMERA ───────────────────────────────────────────────────────────────────
-function updateCamera() {
+// ═══════════════════════════════════════════════════════
+//  CAMERA
+// ═══════════════════════════════════════════════════════
+function updateCam() {
   if (!player || !player.alive) return;
-  const head = player.segs[0];
-  const tx = head.x - W / 2;
-  const ty = head.y - H / 2;
-  camera.x += (tx - camera.x) * 0.12;
-  camera.y += (ty - camera.y) * 0.12;
+  const hx = player.segs[0].x, hy = player.segs[0].y;
+  camX += ((hx - W / 2) - camX) * 0.1;
+  camY += ((hy - H / 2) - camY) * 0.1;
 }
 
-// ─── DRAW GRID ────────────────────────────────────────────────────────────────
-function drawGrid() {
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+// ═══════════════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════════════
+function toScreen(wx, wy) {
+  return [wx - camX, wy - camY];
+}
+
+function inView(sx, sy, pad = 20) {
+  return sx > -pad && sx < W + pad && sy > -pad && sy < H + pad;
+}
+
+function drawBackground() {
+  ctx.fillStyle = '#0a1a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  const gs = 80;
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
   ctx.lineWidth = 1;
-  const gridSize = 80;
-  const offX = -camera.x % gridSize;
-  const offY = -camera.y % gridSize;
-  for (let x = offX; x < W; x += gridSize) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-  }
-  for (let y = offY; y < H; y += gridSize) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-  }
-  ctx.restore();
-}
+  const ox = (-camX % gs + gs) % gs;
+  const oy = (-camY % gs + gs) % gs;
+  ctx.beginPath();
+  for (let x = ox; x < W; x += gs) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+  for (let y = oy; y < H; y += gs) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+  ctx.stroke();
 
-// ─── DRAW WORLD BORDER ────────────────────────────────────────────────────────
-function drawBorder() {
-  ctx.save();
-  const x1 = -camera.x, y1 = -camera.y;
+  // Border
+  const [bx, by] = toScreen(0, 0);
   ctx.strokeStyle = '#4ade80';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
   ctx.shadowColor = '#4ade80';
-  ctx.shadowBlur = 20;
-  ctx.strokeRect(x1, y1, WORLD, WORLD);
-  ctx.restore();
+  ctx.shadowBlur = 18;
+  ctx.strokeRect(bx, by, WORLD, WORLD);
+  ctx.shadowBlur = 0;
 }
 
-// ─── DRAW ORBS ────────────────────────────────────────────────────────────────
 function drawOrbs(t) {
   for (const o of orbs) {
-    const sx = o.x - camera.x, sy = o.y - camera.y;
-    if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) continue;
-    const pulse = 0.85 + 0.15 * Math.sin(t * 0.003 + o.pulse);
-    const r = o.r * pulse;
-    ctx.save();
-    ctx.shadowColor = o.glow;
-    ctx.shadowBlur = 10;
+    const [sx, sy] = toScreen(o.x, o.y);
+    if (!inView(sx, sy, 20)) continue;
+    const pulse = o.r * (0.85 + 0.15 * Math.sin(t * 0.002 + o.x));
     ctx.beginPath();
-    ctx.arc(sx, sy, r, 0, Math.PI * 2);
-    ctx.fillStyle = o.color;
+    ctx.arc(sx, sy, pulse, 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${o.hue},80%,60%)`;
+    ctx.shadowColor = `hsl(${o.hue},80%,80%)`;
+    ctx.shadowBlur = 8;
     ctx.fill();
-    ctx.restore();
+    ctx.shadowBlur = 0;
   }
 }
 
-// ─── DRAW SNAKE ───────────────────────────────────────────────────────────────
-function drawSnake(snake, t) {
-  if (!snake.alive || snake.segs.length < 2) return;
-  const { segs, skin, angle, boosting: isBoost, boostFuel } = snake;
+function drawSnake(snake) {
+  if (!snake.alive) return;
+  const segs = snake.segs;
+  if (segs.length < 2) return;
 
-  // Draw body segments
+  // Body
   for (let i = segs.length - 1; i >= 1; i--) {
-    const seg = segs[i];
-    const sx = seg.x - camera.x, sy = seg.y - camera.y;
-    if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) continue;
-
-    const ratio = i / segs.length;
-    const bodyColor = skin.body[i % skin.body.length];
-    const segRadius = CELL * 0.5 * (1 - ratio * 0.3);
-
+    const [sx, sy] = toScreen(segs[i].x, segs[i].y);
+    if (!inView(sx, sy, SEG_R * 2)) continue;
+    const t = i / segs.length;
+    const r = SEG_R * (1 - t * 0.25);
     ctx.beginPath();
-    ctx.arc(sx, sy, segRadius, 0, Math.PI * 2);
-    ctx.fillStyle = bodyColor;
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.fillStyle = snake.skin.b;
     ctx.fill();
-
-    // Scale pattern
-    if (i % 3 === 0) {
+    if (i % 4 === 0) {
       ctx.beginPath();
-      ctx.arc(sx, sy, segRadius * 0.6, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.arc(sx, sy, r * 0.55, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.07)';
       ctx.fill();
     }
   }
 
   // Head
-  const head = segs[0];
-  const hx = head.x - camera.x, hy = head.y - camera.y;
-  const hr = CELL * 0.65;
+  const [hx, hy] = toScreen(segs[0].x, segs[0].y);
+  const hr = SEG_R * 1.3;
 
-  // Boost glow
-  if (isBoost) {
-    ctx.save();
-    ctx.shadowColor = skin.head;
-    ctx.shadowBlur = 20;
+  if (snake.boosting) {
     ctx.beginPath();
-    ctx.arc(hx, hy, hr * 1.3, 0, Math.PI * 2);
-    ctx.fillStyle = skin.head + '44';
+    ctx.arc(hx, hy, hr * 1.6, 0, Math.PI * 2);
+    ctx.fillStyle = snake.skin.h + '33';
     ctx.fill();
-    ctx.restore();
   }
 
-  ctx.save();
-  ctx.shadowColor = skin.head;
-  ctx.shadowBlur = isBoost ? 14 : 6;
   ctx.beginPath();
   ctx.arc(hx, hy, hr, 0, Math.PI * 2);
-  ctx.fillStyle = skin.head;
+  ctx.fillStyle = snake.skin.h;
+  ctx.shadowColor = snake.skin.h;
+  ctx.shadowBlur = snake.boosting ? 16 : 6;
   ctx.fill();
-  ctx.restore();
+  ctx.shadowBlur = 0;
 
   // Eyes
-  const eyeOff = hr * 0.45;
-  const ex1 = hx + Math.cos(angle - 0.5) * eyeOff;
-  const ey1 = hy + Math.sin(angle - 0.5) * eyeOff;
-  const ex2 = hx + Math.cos(angle + 0.5) * eyeOff;
-  const ey2 = hy + Math.sin(angle + 0.5) * eyeOff;
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(ex1, ey1, hr * 0.28, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(ex2, ey2, hr * 0.28, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#111';
-  const pupilOff = hr * 0.08;
-  ctx.beginPath(); ctx.arc(ex1 + Math.cos(angle)*pupilOff, ey1 + Math.sin(angle)*pupilOff, hr*0.14, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(ex2 + Math.cos(angle)*pupilOff, ey2 + Math.sin(angle)*pupilOff, hr*0.14, 0, Math.PI*2); ctx.fill();
+  const ea = hr * 0.42;
+  const a = snake.angle;
+  for (const s of [-1, 1]) {
+    const ex = hx + Math.cos(a + s * 0.52) * ea;
+    const ey = hy + Math.sin(a + s * 0.52) * ea;
+    ctx.beginPath(); ctx.arc(ex, ey, hr * 0.26, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + Math.cos(a)*hr*0.08, ey + Math.sin(a)*hr*0.08, hr*0.13, 0, Math.PI*2);
+    ctx.fillStyle = '#111'; ctx.fill();
+  }
 
-  // Name tag
-  ctx.save();
-  ctx.font = 'bold 11px Segoe UI, Arial';
+  // Name
+  ctx.font = 'bold 11px Segoe UI,Arial';
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillText(snake.name, hx + 1, hy - hr - 6);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillText(snake.name, hx + 1, hy - hr - 5);
   ctx.fillStyle = '#fff';
-  ctx.fillText(snake.name, hx, hy - hr - 7);
-  ctx.restore();
+  ctx.fillText(snake.name, hx, hy - hr - 6);
 
-  // Boost bar (player only)
+  // Fuel bar (player)
   if (snake.isPlayer) {
-    const bw = 50, bh = 5;
-    const bx = hx - bw/2, by = hy + hr + 6;
+    const bw = 48, bh = 4;
+    const bx2 = hx - bw/2, by2 = hy + hr + 5;
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(bx, by, bw, bh);
-    const ratio2 = boostFuel / 100;
-    const fuelColor = ratio2 > 0.5 ? '#4ade80' : ratio2 > 0.2 ? '#fbbf24' : '#f87171';
-    ctx.fillStyle = fuelColor;
-    ctx.fillRect(bx, by, bw * ratio2, bh);
+    ctx.fillRect(bx2, by2, bw, bh);
+    const pct = snake.fuel / 100;
+    ctx.fillStyle = pct > 0.5 ? '#4ade80' : pct > 0.25 ? '#fbbf24' : '#f87171';
+    ctx.fillRect(bx2, by2, bw * pct, bh);
   }
 }
 
-// ─── DRAW PARTICLES ───────────────────────────────────────────────────────────
-function drawParticles() {
-  for (const p of particles) {
-    const sx = p.x - camera.x, sy = p.y - camera.y;
-    ctx.save();
+function drawSparks() {
+  for (const p of sparks) {
+    const [sx, sy] = toScreen(p.x, p.y);
     ctx.globalAlpha = p.life;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.arc(sx, sy, p.r * p.life, 0, Math.PI*2);
+    ctx.arc(sx, sy, p.r * p.life, 0, Math.PI * 2);
     ctx.fillStyle = p.color;
     ctx.fill();
-    ctx.restore();
   }
+  ctx.globalAlpha = 1;
 }
 
-// ─── MINIMAP ──────────────────────────────────────────────────────────────────
 function drawMinimap() {
   const mw = mm.width, mh = mm.height;
-  const scale = mw / WORLD;
-
-  mctx.fillStyle = 'rgba(10,10,30,0.85)';
+  const sc = mw / WORLD;
+  mctx.fillStyle = 'rgba(5,10,5,0.9)';
   mctx.fillRect(0, 0, mw, mh);
 
-  // Orbs
-  mctx.fillStyle = '#fff';
+  mctx.fillStyle = 'rgba(255,255,255,0.4)';
   for (const o of orbs) {
-    mctx.fillRect(o.x * scale - 0.5, o.y * scale - 0.5, 1, 1);
+    mctx.fillRect(o.x * sc, o.y * sc, 1, 1);
   }
 
-  // Bots
   for (const bot of bots) {
     if (!bot.snake.alive) continue;
     const h = bot.snake.segs[0];
-    mctx.fillStyle = bot.snake.skin.head;
-    mctx.fillRect(h.x * scale - 2, h.y * scale - 2, 4, 4);
+    mctx.fillStyle = bot.snake.skin.h;
+    mctx.fillRect(h.x*sc - 2, h.y*sc - 2, 4, 4);
   }
 
-  // Player
   if (player && player.alive) {
     const h = player.segs[0];
     mctx.fillStyle = '#fff';
-    mctx.fillRect(h.x * scale - 3, h.y * scale - 3, 6, 6);
-
-    // Viewport rect
-    mctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    mctx.fillRect(h.x*sc - 3, h.y*sc - 3, 6, 6);
+    mctx.strokeStyle = 'rgba(255,255,255,0.25)';
     mctx.lineWidth = 1;
-    mctx.strokeRect(camera.x * scale, camera.y * scale, W * scale, H * scale);
+    mctx.strokeRect(camX*sc, camY*sc, W*sc, H*sc);
   }
 }
 
-// ─── HUD UPDATE ───────────────────────────────────────────────────────────────
 function updateHUD() {
-  document.getElementById('score-val').textContent = score;
-  document.getElementById('length-val').textContent = `Length: ${Math.floor(player?.length ?? 0)}`;
+  document.getElementById('sv').textContent = score;
+  document.getElementById('lv').textContent = `Length ${player?.len ?? 0}`;
 
-  // Leaderboard
-  const entries = [
-    player ? { name: playerName, score, isPlayer: true } : null,
-    ...bots.filter(b => b.snake.alive).map(b => ({ name: b.snake.name, score: b.snake.score, isPlayer: false })),
-  ].filter(Boolean).sort((a,b) => b.score - a.score).slice(0, 8);
+  const rows = [
+    player ? { name: pName, pts: score, me: true } : null,
+    ...bots.filter(b => b.snake.alive).map(b => ({ name: b.snake.name, pts: b.snake.points, me: false })),
+  ].filter(Boolean).sort((a,b) => b.pts - a.pts).slice(0, 7);
 
-  const lbEl = document.getElementById('lb-entries');
-  lbEl.innerHTML = entries.map((e, i) =>
-    `<div class="lb-row${e.isPlayer ? ' me' : ''}">
-      <span>${i+1}. ${e.name}</span>
-      <span>${e.score}</span>
+  document.getElementById('lb-rows').innerHTML = rows.map((r, i) =>
+    `<div class="lb-row${r.me ? ' lb-me' : ''}">
+      <span>${i+1}. ${r.name}</span><span>${r.pts}</span>
     </div>`
   ).join('');
 }
 
-// ─── DEATH SCREEN ─────────────────────────────────────────────────────────────
-function showDeath() {
-  gameRunning = false;
-  const survived = Math.floor((Date.now() - startTime) / 1000);
-  const min = Math.floor(survived / 60), sec = survived % 60;
-  document.getElementById('death-stats').innerHTML =
-    `Score: <span>${score}</span><br>` +
-    `Length: <span>${Math.floor(player.length)}</span><br>` +
-    `Kills: <span>${kills}</span><br>` +
-    `Survived: <span>${min}m ${sec}s</span>`;
-  document.getElementById('death-screen').style.display = 'flex';
-  document.getElementById('hud').style.display = 'none';
-  document.getElementById('minimap').style.display = 'none';
-}
-
-// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
-let lastT = 0;
-function loop(t = 0) {
-  animId = requestAnimationFrame(loop);
-  if (!gameRunning) return;
-  const dt = Math.min(t - lastT, 50);
-  lastT = t;
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function tick(t) {
+  rafId = requestAnimationFrame(tick);
+  if (!running) return;
 
   // Update
-  steerPlayer();
-  if (player && player.alive) moveSnake(player);
-  if (player && player.alive) eatOrbs(player);
+  if (player && player.alive) {
+    steerSnake(player);
+    moveSnake(player);
+    eatOrbs(player);
+  }
 
   for (const bot of bots) {
-    steerBot(bot);
-    if (bot.snake.alive) moveSnake(bot.snake);
-    if (bot.snake.alive) eatOrbs(bot.snake);
+    if (bot.snake.alive) {
+      steerBot(bot);
+      moveSnake(bot.snake);
+      eatOrbs(bot.snake);
+    }
   }
 
   checkCollisions();
-  respawnDeadBots();
-  updateParticles();
-  updateCamera();
+  respawnBots();
 
-  // Maintain orb count
-  while (orbs.length < ORB_COUNT) orbs.push(makeOrb());
+  // Update sparks
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i];
+    p.x  += p.vx; p.y  += p.vy;
+    p.vx *= 0.93; p.vy *= 0.93;
+    p.life -= 0.028;
+    if (p.life <= 0) sparks.splice(i, 1);
+  }
+
+  // Orb count
+  while (orbs.length < NUM_ORBS) orbs.push(makeOrb());
+
+  updateCam();
 
   // Draw
-  ctx.fillStyle = '#0d1b0d';
-  ctx.fillRect(0, 0, W, H);
-  drawGrid();
-  drawBorder();
+  drawBackground();
   drawOrbs(t);
-
-  // Draw all snakes (bots behind player)
-  for (const bot of bots) drawSnake(bot.snake, t);
-  if (player && player.alive) drawSnake(player, t);
-
-  drawParticles();
+  for (const bot of bots) drawSnake(bot.snake);
+  if (player) drawSnake(player);
+  drawSparks();
   updateHUD();
   drawMinimap();
 }
 
-// Start the render loop (idle on start screen)
-requestAnimationFrame(loop);
+// ═══════════════════════════════════════════════════════
+//  UI WIRING
+// ═══════════════════════════════════════════════════════
+document.getElementById('play-btn').addEventListener('click', startGame);
+document.getElementById('name-inp').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+document.getElementById('retry-btn').addEventListener('click', startGame);
+
+// Kick off idle render loop (black canvas, start screen visible)
+rafId = requestAnimationFrame(tick);
 </script>
 </body>
 </html>
